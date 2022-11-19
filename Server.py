@@ -35,7 +35,7 @@ def clientAccept():
         client, (rip, rport) = serverSockot.accept()   
         # join to connection pool     
         serverConnectionPool.append(client)
-        serverConnectionPoolBackup.append(client)
+        
         # 開始執行
         newThread = threading.Thread(target=messageHandle, args=(client,len(serverConnectionPool)-1,))
         newThread.setDaemon(True)
