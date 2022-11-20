@@ -114,9 +114,9 @@ def main():
             index, msg = input("請輸入“索引,消息”的形式：").split(",")
             serverConnectionPool[int(index)].sendall(msg.encode(encoding='utf8'))
         elif cmd == '3':
-            exit()          
+            exit()       
         print("[playerOneReady,playerTwoReady]: ",playerOneReady,playerTwoReady)
-
+    
 def reSet():
     global serverConnectionPool, playerOneReady, playerTwoReady
     playerOneReady = playerTwoReady  = False

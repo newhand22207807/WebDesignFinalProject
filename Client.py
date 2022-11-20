@@ -104,7 +104,6 @@ def find():
 
     for i in range(len(condition)):
         theMax = max(condition[i])
-        #print('no: ',i,' maxvalue: ',theMax,'index',condition[i].index(theMax))
         if theMax >= 5:
             return condition[i].index(theMax) + 1
     return 0
@@ -163,6 +162,7 @@ def wait():
 
         # 綁定二號先收訊息
         if not currentPlayer:
+            print("not currentplayer------")
             #第一次消息
             print("first message")
             thread = threading.Thread(target = firstMessage)
@@ -223,13 +223,14 @@ def exit():
     print("exit")
     errorMessage()
 def restartGame():
-    global board,regard,condition,waitingForElse
+    global board,regard,condition,waitingForElse,currentPlayer
     for i in range(18):
         for j in range(18):
             board[i][j] = 0
             regard[i][j] = 0
     condition.clear()
     initialValue()
+    currentPlayer = 1
     waitingForElse = False
 
 def errorMessage():
