@@ -9,6 +9,7 @@ import time
 import numpy as np
 import socket
 import threading
+import random
 
 # 棋盤 0,0(53,53) 到 19*19(647,647) 
 # 圖片載入
@@ -16,22 +17,37 @@ import threading
 # exit  200*100
 # options 300*100
 
-goBoard         = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\goBoard.png")
-menuBackground  = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\menuBackground.png")
-startButton     = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\start.png")
-exitButton      = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\exit.png")
-optionsButton   = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\options.png")
-whiteChess      = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\whiteChess.png")
-blackChess      = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\blackChess.png")
-returnPic       = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\return.png")
-waitingForP     = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\waitingForPlayer.png")
-menu            = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\menu.png")
+# goBoard         = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\goBoard.png")
+# menuBackground  = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\menuBackground.png")
+# startButton     = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\start.png")
+# exitButton      = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\exit.png")
+# optionsButton   = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\options.png")
+# whiteChess      = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\whiteChess.png")
+# blackChess      = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\blackChess.png")
+# returnPic       = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\return.png")
+# waitingForP     = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\waitingForPlayer.png")
+# menu            = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\menu.png")
+
+
+goBoard         = pygame.image.load("./picture/goBoard.png")
+menuBackground  = pygame.image.load("./picture/menuBackground.png")
+startButton     = pygame.image.load("./picture/start.png")
+exitButton      = pygame.image.load("./picture/exit.png")
+optionsButton   = pygame.image.load("./picture/options.png")
+whiteChess      = pygame.image.load("./picture/whiteChess.png")
+blackChess      = pygame.image.load("./picture/blackChess.png")
+returnPic       = pygame.image.load("./picture/return.png")
+waitingForP     = pygame.image.load("./picture/waitingForPlayer.png")
+menu            = pygame.image.load("./picture/menu.png")
+
 # 變數
 currentScene = "menuScene" 
 currentPlayer = 1 # 1 : black, 0 : white
 latestX=-1
 latestY=-1 
 BUF_SIZE = 1024
+timeout=0
+temp=0
 # 棋盤
 board = np.zeros((18,18))
 regard = np.zeros((18,18))
@@ -139,7 +155,7 @@ def optionScene():
     pygame.display.update()
 
 def wait():
-    global currentScene,currentPlayer,waitingForElse,client
+    global currentScene,currentPlayer,waitingForElse,client,timeout
     createSocket()
     try:
         windowSurface.fill((255,255,255))
@@ -157,6 +173,7 @@ def wait():
                 print(msg)
                 if msg=="0":
                     print('game Start:',msg)
+                    timeout=0
                     break
                 else:
                     currentPlayer = 0
@@ -177,13 +194,14 @@ def wait():
         errorMessage()    
 def playerScene():
     try:
-        global chessX,chessY,board
+        global chessX,chessY,board,temp,timeout
 
         windowSurface.fill((255,255,255))
         windowSurface.blit(goBoard,(0,0))
 
         TextYourChess = fontSize50.render("You Chess:",True,(0,0,0))
         windowSurface.blit(TextYourChess,(750,0))
+        
 
         if currentPlayer:
             windowSurface.blit(blackChess,(980,20))
@@ -203,7 +221,9 @@ def playerScene():
             windowSurface.blit(titleText,(750,200))
         else:
             titleText=fontSize50.render("Your Turn", 1, (255,0,0)) 
-            windowSurface.blit(titleText,(750,200))    
+            windowSurface.blit(titleText,(750,200)) 
+            Text = fontSize50.render(str(int(timeout)-int(temp)),1,(0,0,0))
+            windowSurface.blit(Text,(750,50))   
         pygame.display.update()
     except:
         errorMessage()
@@ -248,7 +268,7 @@ def errorMessage():
    
 def sendMessage(data):
     try:
-        global waitingForElse,client,latestX,latestY
+        global waitingForElse,client,latestX,latestY,timeout
         waitingForElse = True
         data = data.encode('utf-8')
         client.sendall(data)
@@ -265,6 +285,7 @@ def sendMessage(data):
                     board[int(rec_data[0]),int(rec_data[1])]=2
                 else:
                     board[int(rec_data[0]),int(rec_data[1])]=1
+                timeout=0
                 break
         waitingForElse=False
     except:
@@ -272,11 +293,12 @@ def sendMessage(data):
     
 def firstMessage():
     try:
-        global waitingForElse
+        global waitingForElse,timeout
         while True:
             print("i am waiting for the first message")
             rec_data = client.recv(BUF_SIZE).decode(encoding='utf8')
             print(rec_data)
+            timeout=0
             if len(rec_data)>=3:
                 rec_data=rec_data.split()
                 # 接收server的反饋數據
@@ -353,10 +375,13 @@ def buttonEvent(x,y):
         errorMessage()
 
 def main():
-    global currentScene
+    global currentScene,timeout,temp,currentPlayer
     try:
         while True:
+
+
             # 迭代整個事件迴圈，若有符合事件則對應處理
+            
             for event in pygame.event.get():
                 # 當使用者結束視窗，程式也結束
                 if event.type == pygame.QUIT:
@@ -366,7 +391,22 @@ def main():
                     # 取得滑鼠位置
                     x, y = pygame.mouse.get_pos()
                     buttonEvent(x,y)
-            result = find()    
+
+            if(timeout==0 ):
+                timeout=time.time()
+                print(timeout)
+                timeout=timeout+5
+                print(timeout)
+            temp=time.time()
+            print(str(timeout)+";"+str(temp))
+            if(int(temp)==int(timeout)):
+                print("aaaa")
+                x=random.randint(53,647)
+                y=random.randint(53,647)
+                buttonEvent(x,y)
+                timeout=0
+
+            result = find()   
             if result != 0:
                 if (result == 1 and currentPlayer) or (result == 2 and not currentPlayer): 
                     currentScene ="winScene"
