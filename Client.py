@@ -17,18 +17,6 @@ import random
 # exit  200*100
 # options 300*100
 
-# goBoard         = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\goBoard.png")
-# menuBackground  = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\menuBackground.png")
-# startButton     = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\start.png")
-# exitButton      = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\exit.png")
-# optionsButton   = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\options.png")
-# whiteChess      = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\whiteChess.png")
-# blackChess      = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\blackChess.png")
-# returnPic       = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\return.png")
-# waitingForP     = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\waitingForPlayer.png")
-# menu            = pygame.image.load("c:\\Users\\User\\Desktop\\網路程式設計\\finalProject\\picture\\menu.png")
-
-
 goBoard         = pygame.image.load("./picture/goBoard.png")
 menuBackground  = pygame.image.load("./picture/menuBackground.png")
 startButton     = pygame.image.load("./picture/start.png")
@@ -39,15 +27,22 @@ blackChess      = pygame.image.load("./picture/blackChess.png")
 returnPic       = pygame.image.load("./picture/return.png")
 waitingForP     = pygame.image.load("./picture/waitingForPlayer.png")
 menu            = pygame.image.load("./picture/menu.png")
-
+notYourturn     = pygame.image.load("./picture/notYourturn.png")
+yourTurn        = pygame.image.load("./picture/yourTurn.png")
+yourChess       = pygame.image.load("./picture/yourChess.png")
+timeLeft        = pygame.image.load("./picture/timeLeft.png")
+surrender       = pygame.image.load("./picture/surrender.png")
+youWin          = pygame.image.load("./picture/youWin.png")
+youLose         = pygame.image.load("./picture/youLose.png")
 # 變數
 currentScene = "menuScene" 
 currentPlayer = 1 # 1 : black, 0 : white
 latestX=-1
 latestY=-1 
 BUF_SIZE = 1024
-timeout=0
-temp=0
+timeout = 0
+temp = 0
+giveUp = -1
 # 棋盤
 board = np.zeros((18,18))
 regard = np.zeros((18,18))
@@ -198,15 +193,12 @@ def playerScene():
 
         windowSurface.fill((255,255,255))
         windowSurface.blit(goBoard,(0,0))
-
-        TextYourChess = fontSize50.render("You Chess:",True,(0,0,0))
-        windowSurface.blit(TextYourChess,(750,0))
-        
-
+        windowSurface.blit(yourChess,(750,0))
+        windowSurface.blit(timeLeft,(750,100)) 
         if currentPlayer:
-            windowSurface.blit(blackChess,(980,20))
+            windowSurface.blit(blackChess,(1150,10))
         else:
-            windowSurface.blit(whiteChess,(980,20))
+            windowSurface.blit(whiteChess,(1150,10))
 
         # 把棋子填上去
         for i in range(18):
@@ -217,20 +209,19 @@ def playerScene():
                     windowSurface.blit(whiteChess,(chessX[i],chessY[j]))
 
         if waitingForElse:
-            titleText=fontSize50.render("Not Your Turn", 1, (0, 0, 0)) 
-            windowSurface.blit(titleText,(750,200))
-        else:
-            titleText=fontSize50.render("Your Turn", 1, (255,0,0)) 
-            windowSurface.blit(titleText,(750,200)) 
+            windowSurface.blit(notYourturn,(750,200))
+        else:    
+            windowSurface.blit(surrender,(750,600))
+            windowSurface.blit(yourTurn,(750,200)) 
             Text = fontSize50.render(str(int(timeout)-int(temp)),1,(0,0,0))
-            windowSurface.blit(Text,(750,50))   
+            windowSurface.blit(Text,(1100,95))   
+            
         pygame.display.update()
     except:
         errorMessage()
 def winScene():
     windowSurface.fill((255,255,255))
-    text = fontSize100.render("YOU WIN......",True,(0,0,0))
-    windowSurface.blit(text,(400,200))
+    windowSurface.blit(youWin,(400,200))
     windowSurface.blit(exitButton,(300,400))
     windowSurface.blit(menu,(700,420))
     pygame.display.update()
@@ -238,17 +229,18 @@ def winScene():
     restartGame()
 def loseScene():
     windowSurface.fill((255,255,255))
-    titleText=fontSize100.render("YOU LOSE......", True, (0,255,255))
-    windowSurface.blit(titleText,(300,200))
+    windowSurface.blit(youLose,(400,200))
     windowSurface.blit(exitButton,(300,400))
     windowSurface.blit(menu,(700,420))
     pygame.display.update()    
     restartGame()
+
 def exit():
     print("exit")
     errorMessage()
+
 def restartGame():
-    global board,regard,condition,waitingForElse,currentPlayer
+    global board,regard,condition,waitingForElse,currentPlayer,giveUp
     for i in range(18):
         for j in range(18):
             board[i][j] = 0
@@ -256,6 +248,7 @@ def restartGame():
     condition.clear()
     initialValue()
     currentPlayer = 1
+    giveUp = -1
     waitingForElse = False
 
 def errorMessage():
@@ -265,10 +258,11 @@ def errorMessage():
     client.sendall(msg)
     pygame.quit()
     sys.exit()
-   
+
+
 def sendMessage(data):
     try:
-        global waitingForElse,client,latestX,latestY,timeout
+        global waitingForElse,client,latestX,latestY,timeout,giveUp
         waitingForElse = True
         data = data.encode('utf-8')
         client.sendall(data)
@@ -276,6 +270,9 @@ def sendMessage(data):
         # 接收server的反饋數據
         while True:
             rec_data = client.recv(BUF_SIZE).decode(encoding='utf8')
+            if len(rec_data) == 1:
+                giveUp = rec_data
+
             if len(rec_data)>=3:
                 rec_data=rec_data.split()
 
@@ -293,10 +290,12 @@ def sendMessage(data):
     
 def firstMessage():
     try:
-        global waitingForElse,timeout
+        global waitingForElse,timeout,giveUp
         while True:
             print("i am waiting for the first message")
             rec_data = client.recv(BUF_SIZE).decode(encoding='utf8')
+            if len(rec_data) == 1:
+                giveUp = rec_data
             print(rec_data)
             timeout=0
             if len(rec_data)>=3:
@@ -325,7 +324,7 @@ def changeCoordinate(x,y):
 
 def buttonEvent(x,y):  
     try:
-        global currentScene,waitingForElse,client
+        global currentScene,waitingForElse,client,giveUp
         print("[x,y] : ",x,",",y)
         print("currentscene: ",currentScene)
         if (currentScene == "menuScene" 
@@ -360,6 +359,12 @@ def buttonEvent(x,y):
             client.sendall(msg)
             currentScene = "menuScene"
             restartGame()
+        elif (currentScene == "playerScene" and not waitingForElse
+            and x >= 750 and x <= surrender.get_width() + 750
+            and y >= 600 and y <= surrender.get_height() + 600):
+            giveUp = currentPlayer
+            client.sendall(str(giveUp).encode("UTF-8"))
+
         elif currentScene == "playerScene" and not waitingForElse: # 下棋介面
             i,j = changeCoordinate(x,y)
             if i != -1 and j != -1 and board[i,j] == 0:
@@ -373,15 +378,28 @@ def buttonEvent(x,y):
                 else: board[i,j] = 2  
     except:
         errorMessage()
+def autoPlaychess():
+    global timeout,temp
+
+    if(timeout == 0):
+        timeout = time.time()
+        timeout=timeout+5
+    temp = time.time()
+    if(int(temp) == int(timeout)):
+        # 確保不會下到重複的旗子，導致秒數重算 此方法非最好的解決方法
+        while True:
+            x = random.randint(53,647)
+            y = random.randint(53,647)
+            i,j = changeCoordinate(x,y)
+            if board[i][j] == 0: break
+        buttonEvent(x,y)
+        timeout = 0    
 
 def main():
     global currentScene,timeout,temp,currentPlayer
     try:
         while True:
-
-
             # 迭代整個事件迴圈，若有符合事件則對應處理
-            
             for event in pygame.event.get():
                 # 當使用者結束視窗，程式也結束
                 if event.type == pygame.QUIT:
@@ -392,26 +410,21 @@ def main():
                     x, y = pygame.mouse.get_pos()
                     buttonEvent(x,y)
 
-            if(timeout==0 ):
-                timeout=time.time()
-                print(timeout)
-                timeout=timeout+5
-                print(timeout)
-            temp=time.time()
-            print(str(timeout)+";"+str(temp))
-            if(int(temp)==int(timeout)):
-                print("aaaa")
-                x=random.randint(53,647)
-                y=random.randint(53,647)
-                buttonEvent(x,y)
-                timeout=0
+            # 是否 surrender
+            if giveUp != -1:
+                if (giveUp == currentPlayer) : 
+                    currentScene = "loseScene"
+                else: currentScene = "winScene"
+
+            # 預設五秒沒下棋，會自動下棋
+            autoPlaychess()
 
             result = find()   
             if result != 0:
                 if (result == 1 and currentPlayer) or (result == 2 and not currentPlayer): 
                     currentScene ="winScene"
                 else: currentScene="loseScene"
-
+                
             createScene()
     except:
         errorMessage()

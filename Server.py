@@ -79,7 +79,14 @@ def messageHandle(client, index):
                 print("enter the reset")
                 reSet()
                 break
-            
+            # client 發出 surrender 
+            if clientMsg == '1':
+                serverConnectionPool[1].sendall(clientMsg.encode("UTF-8"))
+                break
+            if clientMsg == '0':
+                serverConnectionPool[0].sendall(clientMsg.encode("UTF-8"))  
+                break
+
             if index == 0:
                 print("send to 1")
                 serverConnectionPool[1].sendall(clientMsg.encode("UTF-8"))
@@ -105,15 +112,11 @@ def main():
     newThread.setDaemon(True)
     newThread.start()
     while True:
-        cmd = input("-------------------------\n輸入1: 請查看當前在線人數\n輸入2: 給指定客戶端方發送消息\n輸入3: 關閉伺服器端\n")
+        cmd = input("-------------------------\n輸入1: 請查看當前在線人數\n輸入2: 關閉伺服器端\n")
         if cmd == '1':
             print("----------------------------")
             print("當前在線人數: ",len(serverConnectionPool))
         elif cmd == '2':
-            print("--------------------------")
-            index, msg = input("請輸入“索引,消息”的形式：").split(",")
-            serverConnectionPool[int(index)].sendall(msg.encode(encoding='utf8'))
-        elif cmd == '3':
             exit()       
         print("[playerOneReady,playerTwoReady]: ",playerOneReady,playerTwoReady)
     
