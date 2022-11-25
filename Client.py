@@ -17,6 +17,16 @@ import random
 # exit  200*100
 # options 300*100
 
+# pygame 初始化
+pygame.init()
+pygame.font.init()
+pygame.mixer.init()
+fontSize50 = pygame.font.SysFont("Arial",50)
+fontSize100 = pygame.font.SysFont("Arial",100)
+windowSurface = pygame.display.set_mode((1200,700))
+pygame.display.set_caption("Client")
+
+# picture and music
 goBoard         = pygame.image.load("./picture/goBoard.png")
 menuBackground  = pygame.image.load("./picture/menuBackground.png")
 startButton     = pygame.image.load("./picture/start.png")
@@ -34,6 +44,10 @@ timeLeft        = pygame.image.load("./picture/timeLeft.png")
 surrender       = pygame.image.load("./picture/surrender.png")
 youWin          = pygame.image.load("./picture/youWin.png")
 youLose         = pygame.image.load("./picture/youLose.png")
+on              = pygame.image.load("./picture/on.png")
+off             = pygame.image.load("./picture/off.png")
+music           = pygame.image.load("./picture/music.png")
+bgmusic         = pygame.mixer.Sound("./bgMusic.mp3")
 # 變數
 currentScene = "menuScene" 
 currentPlayer = 1 # 1 : black, 0 : white
@@ -43,6 +57,7 @@ BUF_SIZE = 1024
 timeout = 0
 temp = 0
 giveUp = -1
+
 # 棋盤
 board = np.zeros((18,18))
 regard = np.zeros((18,18))
@@ -59,13 +74,7 @@ condition = [] # 儲存棋盤上黑跟白數量 [[3,0],...]
 # 當前狀況
 waitingForElse = False
 
-# pygame 初始化
-pygame.init()
-pygame.font.init()
-fontSize50 = pygame.font.SysFont("Arial",50)
-fontSize100 = pygame.font.SysFont("Arial",100)
-windowSurface = pygame.display.set_mode((1200,700))
-pygame.display.set_caption("Client")
+
 
 # create socket
 client = ""
@@ -147,8 +156,15 @@ def menuScene():
 def optionScene():
     windowSurface.fill((255,255,255))
     windowSurface.blit(returnPic,(25,625))
+    windowSurface.blit(music,(505,200))
+    windowSurface.blit(on,(405,300))
+    windowSurface.blit(off,(705,300))
     pygame.display.update()
-
+def musicControl(flag):
+    if(flag):
+        bgmusic.play()
+    else:
+        bgmusic.stop()
 def wait():
     global currentScene,currentPlayer,waitingForElse,client,timeout
     createSocket()
@@ -325,6 +341,7 @@ def changeCoordinate(x,y):
 def buttonEvent(x,y):  
     try:
         global currentScene,waitingForElse,client,giveUp
+    
         print("[x,y] : ",x,",",y)
         print("currentscene: ",currentScene)
         if (currentScene == "menuScene" 
@@ -346,6 +363,14 @@ def buttonEvent(x,y):
             and x >= 25 and x <= returnPic.get_width() + 25  
             and y >= 625 and y <= returnPic.get_height() + 625):
             currentScene = "menuScene"
+        elif (currentScene == "optionScene" 
+            and x >= 405 and x <= returnPic.get_width() + 405  
+            and y >= 300 and y <= returnPic.get_height() + 300):
+            musicControl(1)
+        elif (currentScene == "optionScene" 
+            and x >= 705 and x <= returnPic.get_width() + 705  
+            and y >= 300 and y <= returnPic.get_height() + 300):
+            musicControl(0)
         elif ((currentScene == "winScene" or currentScene == "loseScene")
             and x >= 320 and x <= exitButton.get_width() + 260
             and y >= 420 and y <= exitButton.get_height() + 380):
@@ -397,6 +422,8 @@ def autoPlaychess():
 
 def main():
     global currentScene,timeout,temp,currentPlayer
+    # music
+    musicControl(1)
     try:
         while True:
             # 迭代整個事件迴圈，若有符合事件則對應處理
@@ -409,7 +436,6 @@ def main():
                     # 取得滑鼠位置
                     x, y = pygame.mouse.get_pos()
                     buttonEvent(x,y)
-
             # 是否 surrender
             if giveUp != -1:
                 if (giveUp == currentPlayer) : 

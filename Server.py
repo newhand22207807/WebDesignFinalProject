@@ -105,7 +105,7 @@ def messageHandle(client, index):
                 # delete connection
                 serverConnectionPool.remove(client)
                 return
-            
+                            
 def main():
     init()
     newThread = threading.Thread(target=clientAccept)
