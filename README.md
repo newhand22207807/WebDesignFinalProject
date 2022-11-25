@@ -3,8 +3,9 @@
 * Menu Screen  
   - [x] START : 開始遊戲
   - [x] EXIT : 離開遊戲
-  - [ ] OPTION
+  - [x] OPTION : 開啟/關閉音樂
 ![image](https://user-images.githubusercontent.com/62374008/203278771-af7f62cc-ce32-43fa-885d-b46ef9b0dec8.png)
+
 
 * Menu Screen  
   - [x] Your Chess : 顯示你的棋子
@@ -18,6 +19,10 @@
   - [x] EXIT : 離開遊戲
 ![image](https://user-images.githubusercontent.com/62374008/203278990-fd66c554-87a9-4ce9-b9f3-310ae8e58904.png)
 ![image](https://user-images.githubusercontent.com/62374008/203279243-76ccf1a8-2dc2-4e65-b62d-f382ac2b8019.png)
+
+
+* Option Screen
+![image](https://user-images.githubusercontent.com/62374008/204022054-b8a36e0c-4989-4ac7-8665-a3e903c7938c.png)
 
 ## Server
   - [x] 1 : 查詢玩家數量
