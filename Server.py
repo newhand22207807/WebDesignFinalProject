@@ -5,11 +5,11 @@ import time
 
 serverSockot = None
 serverConnectionPool = []
-
+backUppool = []
 PORT = 8888
 backlog = 5
 BUF_SIZE = 1024
-
+count = 0
 playerOneReady = False
 playerTwoReady = False
 
@@ -35,31 +35,29 @@ def clientAccept():
         client, (rip, rport) = serverSockot.accept()   
         # join to connection pool     
         serverConnectionPool.append(client)
-        
+        backUppool.append(client)
         # 開始執行
         newThread = threading.Thread(target=messageHandle, args=(client,len(serverConnectionPool)-1,))
         newThread.setDaemon(True)
         newThread.start()
 
 def messageHandle(client, index):
-    global playerOneReady,playerTwoReady,serverConnectionPool
+    global playerOneReady,playerTwoReady,serverConnectionPool,count
 
     while True:
         while True:
             bytes = client.recv(BUF_SIZE)
             clientMsg = bytes.decode('UTF-8')
-                
             if clientMsg == "1":
-                if index == 0:
+                if index == 0 :
                     playerOneReady = True
                     print("0 ok")       
-                if index == 1:
+                if index == 1 :
                     playerTwoReady = True
                     print("1 ok")
                 break
-            
-        # waiting for else        
-        while len(serverConnectionPool) < 2 or playerOneReady == False or playerTwoReady == False:
+        # waiting for else      
+        while count % 2 != 0 and len(serverConnectionPool) < 2 or playerOneReady == False or playerTwoReady == False:
             pass
         time.sleep(1)
    
@@ -77,14 +75,16 @@ def messageHandle(client, index):
             # client遊戲結束，回傳重新開始
             if clientMsg == "-1":
                 print("enter the reset")
-                reSet()
+                reSet(client)
                 break
             # client 發出 surrender 
             if clientMsg == '1':
                 serverConnectionPool[1].sendall(clientMsg.encode("UTF-8"))
+                reSet(client)
                 break
             if clientMsg == '0':
                 serverConnectionPool[0].sendall(clientMsg.encode("UTF-8"))  
+                reSet(client)
                 break
 
             if index == 0:
@@ -118,12 +118,17 @@ def main():
             print("當前在線人數: ",len(serverConnectionPool))
         elif cmd == '2':
             exit()       
-        print("[playerOneReady,playerTwoReady]: ",playerOneReady,playerTwoReady)
+        print("[playerOneReady,playerTwoReady,count]: ",playerOneReady,playerTwoReady,count)
     
-def reSet():
-    global serverConnectionPool, playerOneReady, playerTwoReady
-    playerOneReady = playerTwoReady  = False
-    serverConnectionPool.clear()
+def reSet(client):
+    global serverConnectionPool, playerOneReady, playerTwoReady,count
+    count += 1
+    if backUppool.index(client) == 0:
+        playerOneReady = False
+    if backUppool.index(client) == 1:
+        playerTwoReady  = False
+    if count % 2 == 1:
+        serverConnectionPool.clear()
 
 if __name__ == "__main__":
     main()
