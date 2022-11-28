@@ -57,6 +57,8 @@ BUF_SIZE = 1024
 timeout = 0
 temp = 0
 giveUp = -1
+c2=(61,61,61)
+position=(900,303)
 
 # 棋盤
 board = np.zeros((18,18))
@@ -154,11 +156,21 @@ def menuScene():
         print("enter menuscene error")
         errorMessage()
 def optionScene():
+    global c2,position
     windowSurface.fill((255,255,255))
     windowSurface.blit(returnPic,(25,625))
     windowSurface.blit(music,(505,200))
-    windowSurface.blit(on,(405,300))
-    windowSurface.blit(off,(705,300))
+    c1=(173, 173, 173)
+    pygame.draw.rect(windowSurface,c1,(300,300,600,5),0)
+    pygame.draw.circle(windowSurface,c1,(300,303),10,0)
+    pygame.draw.circle(windowSurface,c1,(420,303),10,0)
+    pygame.draw.circle(windowSurface,c1,(540,303),10,0)
+    pygame.draw.circle(windowSurface,c1,(660,303),10,0)
+    pygame.draw.circle(windowSurface,c1,(780,303),10,0)
+    pygame.draw.circle(windowSurface,c1,(900,303),10,0)
+    pygame.draw.circle(windowSurface,c2,position,10,0)
+    windowSurface.blit(on,(405,400))
+    windowSurface.blit(off,(705,400))
     pygame.display.update()
 def musicControl(flag):
     if(flag):
@@ -340,7 +352,7 @@ def changeCoordinate(x,y):
 
 def buttonEvent(x,y):  
     try:
-        global currentScene,waitingForElse,client,giveUp
+        global currentScene,waitingForElse,client,giveUp,position
     
         print("[x,y] : ",x,",",y)
         print("currentscene: ",currentScene)
@@ -365,12 +377,42 @@ def buttonEvent(x,y):
             currentScene = "menuScene"
         elif (currentScene == "optionScene" 
             and x >= 405 and x <= returnPic.get_width() + 405  
-            and y >= 300 and y <= returnPic.get_height() + 300):
+            and y >= 400 and y <= returnPic.get_height() + 400):
             musicControl(1)
         elif (currentScene == "optionScene" 
             and x >= 705 and x <= returnPic.get_width() + 705  
-            and y >= 300 and y <= returnPic.get_height() + 300):
+            and y >= 400 and y <= returnPic.get_height() + 400):
             musicControl(0)
+        elif (currentScene == "optionScene"
+            and x>=295 and x<=305
+            and y>=298 and y<=308):
+            position=(300,303)
+            bgmusic.set_volume(0)
+        elif (currentScene == "optionScene"
+            and x>=415 and x<=425
+            and y>=298 and y<=308):
+            position=(420,303)
+            bgmusic.set_volume(0.2)
+        elif (currentScene == "optionScene"
+            and x>=535 and x<=545
+            and y>=298 and y<=308):
+            position=(540,303)
+            bgmusic.set_volume(0.4)
+        elif (currentScene == "optionScene"
+            and x>=655 and x<=665
+            and y>=298 and y<=308):
+            position=(660,303)
+            bgmusic.set_volume(0.6)
+        elif (currentScene == "optionScene"
+            and x>=775 and x<=785
+            and y>=298 and y<=308):
+            position=(780,303)
+            bgmusic.set_volume(0.8)
+        elif (currentScene == "optionScene"
+            and x>=895 and x<=905
+            and y>=298 and y<=308):
+            position=(900,303)
+            bgmusic.set_volume(1)
         elif ((currentScene == "winScene" or currentScene == "loseScene")
             and x >= 320 and x <= exitButton.get_width() + 260
             and y >= 420 and y <= exitButton.get_height() + 380):
@@ -443,7 +485,8 @@ def main():
                 else: currentScene = "winScene"
 
             # 預設五秒沒下棋，會自動下棋
-            autoPlaychess()
+            if(currentScene == "playerScene"):
+                autoPlaychess()
 
             result = find()   
             if result != 0:
