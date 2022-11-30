@@ -374,6 +374,7 @@ def buttonEvent(x,y):
         elif (currentScene == "optionScene" 
             and x >= 405 and x <= returnPic.get_width() + 405  
             and y >= 400 and y <= returnPic.get_height() + 400):
+            position=(900,303)
             bgmusic.set_volume(1)
         elif (currentScene == "optionScene" 
             and x >= 705 and x <= returnPic.get_width() + 705  
