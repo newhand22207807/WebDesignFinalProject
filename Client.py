@@ -172,11 +172,6 @@ def optionScene():
     windowSurface.blit(on,(405,400))
     windowSurface.blit(off,(705,400))
     pygame.display.update()
-def musicControl(flag):
-    if(flag):
-        bgmusic.play()
-    else:
-        bgmusic.stop()
 def wait():
     global currentScene,currentPlayer,waitingForElse,client,timeout
     createSocket()
@@ -284,6 +279,7 @@ def errorMessage():
     msg = "Error"
     msg = msg.encode('utf-8')
     client.sendall(msg)
+    client.close()
     pygame.quit()
     sys.exit()
 
@@ -378,11 +374,12 @@ def buttonEvent(x,y):
         elif (currentScene == "optionScene" 
             and x >= 405 and x <= returnPic.get_width() + 405  
             and y >= 400 and y <= returnPic.get_height() + 400):
-            musicControl(1)
+            bgmusic.set_volume(1)
         elif (currentScene == "optionScene" 
             and x >= 705 and x <= returnPic.get_width() + 705  
             and y >= 400 and y <= returnPic.get_height() + 400):
-            musicControl(0)
+            position=(300,303)
+            bgmusic.set_volume(0)
         elif (currentScene == "optionScene"
             and x>=295 and x<=305
             and y>=298 and y<=308):
@@ -421,9 +418,7 @@ def buttonEvent(x,y):
             and x >= 700 and x <= menu.get_width()  + 700
             and y >= 420 and y <= menu.get_height() + 420):
             # server 端表示為重新開始
-            msg = "-1"
-            msg = msg.encode('utf-8')
-            client.sendall(msg)
+            
             currentScene = "menuScene"
             restartGame()
         elif (currentScene == "playerScene" and not waitingForElse
@@ -465,7 +460,7 @@ def autoPlaychess():
 def main():
     global currentScene,timeout,temp,currentPlayer
     # music
-    musicControl(1)
+    bgmusic.play(loops=-1)
     try:
         while True:
             # 迭代整個事件迴圈，若有符合事件則對應處理
@@ -490,9 +485,14 @@ def main():
 
             result = find()   
             if result != 0:
+                msg = "-1"
+                msg = msg.encode('utf-8')
+                client.sendall(msg)
+                client.close()
                 if (result == 1 and currentPlayer) or (result == 2 and not currentPlayer): 
                     currentScene ="winScene"
                 else: currentScene="loseScene"
+
                 
             createScene()
     except:
