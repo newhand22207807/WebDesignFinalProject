@@ -9,7 +9,7 @@ backUppool = []
 PORT = 8888
 backlog = 5
 BUF_SIZE = 1024
-count = 0
+flag=False
 playerOneReady = False
 playerTwoReady = False
 
@@ -27,7 +27,7 @@ def init():
     serverSockot.listen(backlog)
 
 def clientAccept():
-    global serverConnectionPool,serverConnectionPoolBackup
+    global serverConnectionPool,backUppool
 
     # 接收新連線
     while True:
@@ -42,7 +42,7 @@ def clientAccept():
         newThread.start()
 
 def messageHandle(client, index):
-    global playerOneReady,playerTwoReady,serverConnectionPool,count
+    global playerOneReady,playerTwoReady,serverConnectionPool
 
     while True:
         while True:
@@ -57,7 +57,7 @@ def messageHandle(client, index):
                     print("1 ok")
                 break
         # waiting for else      
-        while count % 2 != 0 and len(serverConnectionPool) < 2 or playerOneReady == False or playerTwoReady == False:
+        while len(serverConnectionPool) < 2 or playerOneReady == False or playerTwoReady == False:
             pass
         time.sleep(1)
    
@@ -99,7 +99,6 @@ def messageHandle(client, index):
                 print(index," 刪除")
                 if index == 0: playerOneReady = False
                 if index == 1: playerTwoReady = False
-                
                 # close client
                 client.close()
                 # delete connection
@@ -118,17 +117,14 @@ def main():
             print("當前在線人數: ",len(serverConnectionPool))
         elif cmd == '2':
             exit()       
-        print("[playerOneReady,playerTwoReady,count]: ",playerOneReady,playerTwoReady,count)
+        print("[playerOneReady,playerTwoReady]: ",playerOneReady,playerTwoReady)    
     
 def reSet(client):
-    global serverConnectionPool, playerOneReady, playerTwoReady,count
-    count += 1
-    if backUppool.index(client) == 0:
-        playerOneReady = False
-    if backUppool.index(client) == 1:
-        playerTwoReady  = False
-    if count % 2 == 1:
-        serverConnectionPool.clear()
+    global serverConnectionPool, playerOneReady, playerTwoReady
+    playerOneReady = False
+    playerTwoReady  = False
+    serverConnectionPool.clear()
+    backUppool.clear()
 
 if __name__ == "__main__":
     main()
